@@ -79,6 +79,15 @@ class TransactionRegistry:
                 Wykorzystaj do tego metodę verify_signature z simple_cryptography.
             Przypomnienie: podpisywany jest hash transakcji.
         """
+        for tx in self.transactions:
+            if tx.previous_tx_hash == transaction.hash:
+                match tx.signature:
+                    case None:
+                        return False
+                    case signature:
+                        return verify_signature(tx.recipient, signature, hash(signature))
+
+        return False
 
     def add_transaction(self, transaction: Transaction) -> bool:
         """
@@ -89,4 +98,9 @@ class TransactionRegistry:
             Wykorzystaj do tego dwie metody powyżej.
             Zwróć True jeśli dodanie transakcji przebiegło pomyślnie, False w przeciwnym wypadku.
         """
-        raise NotImplementedError()
+        if self.is_transaction_available(transaction):
+            if self.verify_transaction_signature(transaction):
+                self.transactions.append(transaction)
+            return True
+
+        return False
