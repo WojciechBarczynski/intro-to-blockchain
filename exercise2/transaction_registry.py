@@ -50,12 +50,10 @@ class TransactionRegistry:
         self.transactions = copy.copy(initial_transactions)
 
     def get_transaction(self, tx_hash: bytes) -> Optional[Transaction]:
-        """
-        TODO: Znajdź transakcję z podanym tx_hash.
-            Jeśli w liście transakcji istnieje transakcja z podanym tx_hash, zwróć ją,
-            w przeciwnym przypadku zwróć None.
-        """
-        raise NotImplementedError()
+        for transaction in self.transactions:
+            if transaction.hash == tx_hash:
+                return transaction
+        return None
 
     def is_transaction_available(self, tx_hash: bytes) -> bool:
         """
@@ -67,7 +65,10 @@ class TransactionRegistry:
                 False.
             3. Jeśli w poprzednich krokach nic nie zwrócono - transakcja jest dostępna, zwróć True.
         """
-        raise NotImplementedError()
+        for transaction in self.transactions:
+            if transaction.hash == tx_hash or transaction.previous_tx_hash == tx_hash:
+                return False
+        return True
 
     def verify_transaction_signature(self, transaction: Transaction) -> bool:
         """
@@ -78,7 +79,6 @@ class TransactionRegistry:
                 Wykorzystaj do tego metodę verify_signature z simple_cryptography.
             Przypomnienie: podpisywany jest hash transakcji.
         """
-        raise NotImplementedError()
 
     def add_transaction(self, transaction: Transaction) -> bool:
         """
