@@ -25,8 +25,8 @@ class Transaction:
         """
         self.recipient = recipient
         self.previous_tx_hash = previous_tx_hash
-
         self.hash = hash(self.recipient.to_bytes() + self.previous_tx_hash)
+        self.signature = None
 
     def sign(self, private_key: PrivateKey):
         """
@@ -57,7 +57,7 @@ class TransactionRegistry:
 
     def is_transaction_available(self, tx_hash: bytes) -> bool:
         """
-        TODO: Sprawdź czy transakcja o podanym hashu istnieje i nie została wykorzystana.
+        Sprawdź czy transakcja o podanym hashu istnieje i nie została wykorzystana.
             1.  Sprawdź czy istnieje transakcja o podanym tx_hash, jeśli nie, zwróć False.
             2.  Przeszukaj listę transakcji w poszukiwaniu transakcji, dla której pole
                 previous_tx_hash jest równe podanemu w argumencie tx_hash. Jeśli taka transakcja
@@ -66,28 +66,33 @@ class TransactionRegistry:
             3. Jeśli w poprzednich krokach nic nie zwrócono - transakcja jest dostępna, zwróć True.
         """
         for transaction in self.transactions:
-            if transaction.hash == tx_hash or transaction.previous_tx_hash == tx_hash:
+            if transaction.previous_tx_hash == tx_hash:
                 return False
-        return True
+
+        for transaction in self.transactions:
+            if transaction.hash == tx_hash:
+                return True
+            
+        return False
 
     def verify_transaction_signature(self, transaction: Transaction) -> bool:
         """
-        TODO: Zweryfikuj podpis nowej transakcji.
+        Zweryfikuj podpis nowej transakcji.
             1.  Znajdź poprzednią transakcję względem transaction, pole previous_tx_hash z argumentu transaction.
                 Jeśli nie istnieje, zwróć False.
             2.  Sprawdź czy dana transakcja została podpisana przez właściciela (klucz publiczny) poprzedniej transakcji.
                 Wykorzystaj do tego metodę verify_signature z simple_cryptography.
             Przypomnienie: podpisywany jest hash transakcji.
         """
-        for tx in self.transactions:
-            if tx.previous_tx_hash == transaction.hash:
-                match tx.signature:
-                    case None:
-                        return False
-                    case signature:
-                        return verify_signature(tx.recipient, signature, hash(signature))
-
-        return False
+        if transaction.signature is None:
+            return False
+        
+        previous_transaction = self.get_transaction(transaction.previous_tx_hash)
+        
+        if previous_transaction is None:
+            return False
+        
+        return verify_signature(previous_transaction.recipient, transaction.signature, transaction.hash)
 
     def add_transaction(self, transaction: Transaction) -> bool:
         """

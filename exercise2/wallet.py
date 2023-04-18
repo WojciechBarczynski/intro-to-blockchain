@@ -19,24 +19,15 @@ class Wallet:
     def get_available_transactions(
         self, registry: TransactionRegistry
     ) -> List[Transaction]:
-        """
-        TODO: Znajdź wszystkie niewykorzystane transakcje powiązane z tym portfelem.
-            Spośród wszystkich transakcji w rejestrze (registry.transactions), zwróć te z których
-            każda spełnia oba warunki:
-            - odbiorcą transakcji jest klucz publiczny tego portfela
-            - transakcja jest niewykorzystana (metoda is_transaction_available w TransactionRegistry)
-        """
-        raise NotImplementedError()
+        return [tx for tx in registry.transactions
+                if tx.recipient == self.public_key and registry.is_transaction_available(tx.hash)]
 
     def get_balance(self, registry: TransactionRegistry) -> int:
-        """
-        TODO: Zwróć liczbę transakcji z wywołania get_available_transactions.
-        """
-        raise NotImplementedError()
+        return len(self.get_available_transactions(registry))
 
     def transfer(self, registry: TransactionRegistry, recipient: PublicKey) -> bool:
         """
-        TODO: Przekaż coina do nowego właściciela.
+        Przekaż coina do nowego właściciela.
             1.  Znajdź dowolną niewykorzystaną transakcję dla tego portfela, jeśli takiej nie ma, zwróć False.
             2.  Stwórz nową transakcję, z podanym odbiorcą (recipient) oraz polem previous_tx_hash ustawionym na
                 tx_hash znalezionej transakcji.
@@ -45,4 +36,17 @@ class Wallet:
             5.  Zwróć True jeśli wszystko się udało, False w przeciwnym wypadku. (Pamiętaj że add_transaction też zwraca
                 True lub False w zależności od powodzenia)
         """
-        raise NotImplementedError()
+        unused_transactions = self.get_available_transactions(registry)
+
+        if len(unused_transactions) == 0:
+            return False
+
+        previous_tx = unused_transactions[0]
+
+        new_tx = Transaction(recipient, previous_tx.hash)
+        new_tx.sign(recipient)
+
+        if registry.add_transaction(new_tx):
+            return True
+
+        return False
