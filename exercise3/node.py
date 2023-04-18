@@ -23,14 +23,15 @@ class Node:
 
     def __init__(self, owner_public_key: PublicKey, initial_transaction: Transaction):
         """
-        TODO: Przypisz wartości polom owner oraz blockchain przy pomocy podanych argumentów.
+        Przypisz wartości polom owner oraz blockchain przy pomocy podanych argumentów.
             Wykorzystaj `initial_transaction` do stworzenia blockchain.
         """
-        raise NotImplementedError()
+        self.owner = owner_public_key
+        self.blockchain = Blockchain(initial_transaction)
 
     def validate_transaction(self, transaction: Transaction) -> bool:
         """
-        TODO: Sprawdź poprawność transakcji.
+        Sprawdź poprawność transakcji.
             Transakcja jest poprawna, jeśli:
             - ma podpis,
             - podpis jest poprawny (`transaction` jest podpisane przez osobę posiadającą coina),
@@ -47,7 +48,19 @@ class Node:
         !! Ważne !!
         Transakcja, którą chcemy wydać oznacza transakcję poprzednią do tej podanej w argumencie `transaction`.
         """
-        raise NotImplementedError()
+        if transaction.signature is None:
+            return False
+
+        prev_transation = self.blockchain.get_tx_by_hash(
+            transaction.previous_tx_hash)
+
+        if prev_transation is None:
+            return False
+
+        if self.blockchain.get_tx_by_previous_tx_hash(prev_transation.hash) is not None:
+            return False
+
+        return verify_signature(prev_transation.recipient, transaction.signature, transaction.hash)
 
     def _max_int_shifted_by_difficulty(self):
         """
@@ -57,7 +70,7 @@ class Node:
 
     def generate_nonce(self, block: Block) -> Block:
         """
-        TODO: Wygeneruj (wykop) nonce spełniające kryterium -> hash bloku powinien mieć na początku `DIFFICULTY` zer.
+        Wygeneruj (wykop) nonce spełniające kryterium -> hash bloku powinien mieć na początku `DIFFICULTY` zer.
 
         Jak sprawdzić ilość zer na początku hasha?
         Porównaj hash zrzutowany na int oraz maksymalną wartość inta 256 przesuniętą bitowo o DIFFICULTY.
@@ -66,18 +79,30 @@ class Node:
         - int.from_bytes(hash, "big")
         - self._max_int_shifted_by_difficulty()
         """
-        raise NotImplementedError()
+        while (int.from_bytes(block.hash(), 'big') > self._max_int_shifted_by_difficulty()):
+            block.nonce += 1
+        return block
 
     def add_transaction(self, transaction: Transaction):
         """
-        TODO: Dodaj podaną transakcję do bloku.
+        Dodaj podaną transakcję do bloku.
             Sprawdź, czy transakcja jest poprawna (użyj metody `validate_transaction`), jeśli nie jest, rzuć wyjątek.
             Stwórz transakcję generującą nowego coin'a, aby wynagrodzić właściciela node'a (previous_tx_hash = b'\x00').
             Stwórz nowy blok zawierający obie transakcje.
             Znajdź nonce, który spełni kryteria sieci (użyj metody `generate_nonce`).
             Dodaj blok na koniec łańcucha.
         """
-        raise NotImplementedError()
+        if not self.validate_transaction(transaction):
+            raise Exception("Not valid transaction. Verification failed")
+
+        new_coin_transation = Transaction(self.owner, b'\x00')
+
+        new_block = Block(
+            self.blockchain.get_latest_block().hash(), 
+            [transaction, new_coin_transation], 
+            0)
+        
+        self.blockchain.blocks.append(new_block)
 
     def get_state(self) -> Blockchain:
         """
@@ -88,7 +113,7 @@ class Node:
 
 def validate_chain(chain: Blockchain) -> bool:
     """
-    TODO: Zweryfikuj poprawność łańcucha.
+    Zweryfikuj poprawność łańcucha.
         Łańcuch jest poprawny, jeśli dla każdego bloku (poza zerowym):
         - hash poprzedniego bloku jest przypisany prawidłowo,
         _ timestamp nie maleje razem z numerem bloku,
@@ -100,4 +125,4 @@ def validate_chain(chain: Blockchain) -> bool:
 
         Podpowiedź: Dla ułatwienia możesz skonstruować nowego node'a, na bieżąco weryfikując jego poprawność.
     """
-    raise NotImplementedError()
+    raise NotImplementedError

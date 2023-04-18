@@ -23,14 +23,17 @@ class Block:
         self, prev_block_hash: bytes, transactions: List[Transaction], nonce: int = 0
     ):
         """
-        TODO: Stwórz blok z podanych argumentów.
+        Stwórz blok z podanych argumentów.
             Aby pobrać aktualny czas, użyj funkcji time(), a następnie zrzutuj ją na int'a ( int(time()) ).
         """
-        raise NotImplementedError()
+        self.prev_block_hash = prev_block_hash
+        self.timestamp = int(time())
+        self.nonce = nonce
+        self.transactions = transactions
 
     def hash(self) -> bytes:
         """
-        TODO: Oblicz hash bloku wykorzystując do tego funkcję `hash` z modułu simple_cryptography.
+        Oblicz hash bloku wykorzystując do tego funkcję `hash` z modułu simple_cryptography.
             Hash powinien zostać obliczony ze skonkatenowanych składowych bloku:
             - prev_block_hash
             - timestamp
@@ -41,4 +44,9 @@ class Block:
                  all_tx_hash = hash(all_tx_hash + current_tx_hash)
             Możesz założyć, że zarówno timestamp jak i nonce zajmują maksymalnie 32 bajty.
         """
-        raise NotImplementedError()
+        transactions_hash = b'\x00'
+
+        for tx in self.transactions:
+            transactions_hash = hash(transactions_hash + tx.hash)
+
+        return hash(self.prev_block_hash + self.timestamp.to_bytes(32, 'big') + self.nonce.to_bytes(32, 'big') + transactions_hash)
