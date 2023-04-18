@@ -11,8 +11,8 @@ class Transaction:
     metadata: str
 
     def hash(self) -> bytes:
-        transaction_bytes = int.to_bytes(self.id, 'big') + \
-            int.to_bytes(self.target_id, 'big') + \
-            bytes(self.metadata, 'utf-8')
+        transaction_bytes = self.id.to_bytes(2, 'big') +\
+            self.target_id.to_bytes(2, byteorder='big') + \
+            bytes(self.metadata, encoding='utf-8')
         
         return hash(transaction_bytes)

@@ -32,4 +32,4 @@ class Bob:
         self.alice = alice
 
     def validate_signature(self, signature: bytes) -> bool:
-        return verify_signature(self.alice.get_public_key, signature, hash(bytes(UMOWA, 'utf-8')))
+        return verify_signature(self.alice.get_public_key(), signature, hash(bytes(UMOWA, 'utf-8')))
