@@ -11,9 +11,8 @@ class Transaction:
     metadata: str
 
     def hash(self) -> bytes:
-        """
-        TODO: zaimplementuj funkcję hashującą transakcje, wykorzystując funkcję hash z simple_cryptography.
-            Wykorzystaj metodę int.to_bytes(2, 'big') oraz bytes(string, 'utf-8') do konwersji int to bytes.
-            Bytes można konkatenować.
-        """
-        raise NotImplementedError()
+        transaction_bytes = int.to_bytes(self.id, 'big') + \
+            int.to_bytes(self.target_id, 'big') + \
+            bytes(self.metadata, 'utf-8')
+        
+        return hash(transaction_bytes)
