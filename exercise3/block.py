@@ -44,9 +44,14 @@ class Block:
                  all_tx_hash = hash(all_tx_hash + current_tx_hash)
             Możesz założyć, że zarówno timestamp jak i nonce zajmują maksymalnie 32 bajty.
         """
-        transactions_hash = b'\x00'
+        transactions_hash = b"\x00"
 
         for tx in self.transactions:
             transactions_hash = hash(transactions_hash + tx.hash)
 
-        return hash(self.prev_block_hash + self.timestamp.to_bytes(32, 'big') + self.nonce.to_bytes(32, 'big') + transactions_hash)
+        return hash(
+            self.prev_block_hash
+            + self.timestamp.to_bytes(32, "big")
+            + self.nonce.to_bytes(32, "big")
+            + transactions_hash
+        )

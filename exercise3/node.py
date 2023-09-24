@@ -51,8 +51,7 @@ class Node:
         if transaction.signature is None:
             return False
 
-        prev_transation = self.blockchain.get_tx_by_hash(
-            transaction.previous_tx_hash)
+        prev_transation = self.blockchain.get_tx_by_hash(transaction.previous_tx_hash)
 
         if prev_transation is None:
             return False
@@ -60,7 +59,9 @@ class Node:
         if self.blockchain.get_tx_by_previous_tx_hash(prev_transation.hash) is not None:
             return False
 
-        return verify_signature(prev_transation.recipient, transaction.signature, transaction.hash)
+        return verify_signature(
+            prev_transation.recipient, transaction.signature, transaction.hash
+        )
 
     def _max_int_shifted_by_difficulty(self):
         """
@@ -79,7 +80,9 @@ class Node:
         - int.from_bytes(hash, "big")
         - self._max_int_shifted_by_difficulty()
         """
-        while (int.from_bytes(block.hash(), 'big') > self._max_int_shifted_by_difficulty()):
+        while (
+            int.from_bytes(block.hash(), "big") > self._max_int_shifted_by_difficulty()
+        ):
             block.nonce += 1
         return block
 
@@ -95,13 +98,14 @@ class Node:
         if not self.validate_transaction(transaction):
             raise Exception("Not valid transaction. Verification failed")
 
-        new_coin_transation = Transaction(self.owner, b'\x00')
+        new_coin_transation = Transaction(self.owner, b"\x00")
 
         new_block = Block(
-            self.blockchain.get_latest_block().hash(), 
-            [transaction, new_coin_transation], 
-            0)
-        
+            self.blockchain.get_latest_block().hash(),
+            [transaction, new_coin_transation],
+            0,
+        )
+        new_block = self.generate_nonce(new_block)
         self.blockchain.blocks.append(new_block)
 
     def get_state(self) -> Blockchain:
@@ -125,6 +129,32 @@ def validate_chain(chain: Blockchain) -> bool:
 
         Podpowiedź: Dla ułatwienia możesz skonstruować nowego node'a, na bieżąco weryfikując jego poprawność.
     """
-    raise NotImplementedError
-    
-    
+    if len(chain.blocks[0].transactions) != 1:
+        return False
+
+    honest_node = Node(generate_key_pair()[0], chain.blocks[0].transactions[0])
+
+    for index, block in enumerate(chain.blocks[1:]):
+        if block.prev_block_hash != chain.blocks[index].hash():
+            return False
+
+        if block.timestamp < chain.blocks[index].timestamp:
+            return False
+
+        if int.from_bytes(block.hash(), "big") > MAX_256_INT >> DIFFICULTY:
+            return False
+
+        new_coin_transaction_used = False
+        for transaction in block.transactions:
+            if transaction.previous_tx_hash == b"\00":
+                if new_coin_transaction_used:
+                    return False
+                new_coin_transaction_used = True
+                continue
+
+            if not honest_node.validate_transaction(transaction):
+                return False
+
+        honest_node.blockchain.blocks.append(block)
+
+    return True
