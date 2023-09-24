@@ -43,10 +43,7 @@ class Wallet:
 
         previous_tx = unused_transactions[0]
 
-        new_tx = Transaction(recipient, previous_tx.hash)
-        new_tx.sign(recipient)
+        new_tx = Transaction(recipient, unused_transactions[0].hash)
+        new_tx.sign(self._private_key)
 
-        if registry.add_transaction(new_tx):
-            return True
-
-        return False
+        return registry.add_transaction(new_tx)

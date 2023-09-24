@@ -65,15 +65,13 @@ class TransactionRegistry:
                 False.
             3. Jeśli w poprzednich krokach nic nie zwrócono - transakcja jest dostępna, zwróć True.
         """
-        for transaction in self.transactions:
-            if transaction.previous_tx_hash == tx_hash:
-                return False
+        if self.get_transaction(tx_hash) is None:
+            return False
 
-        for transaction in self.transactions:
-            if transaction.hash == tx_hash:
-                return True
-            
-        return False
+        for tx in self.transactions:
+            if tx.previous_tx_hash == tx_hash:
+                return False
+        return True
 
     def verify_transaction_signature(self, transaction: Transaction) -> bool:
         """
@@ -103,9 +101,9 @@ class TransactionRegistry:
             Wykorzystaj do tego dwie metody powyżej.
             Zwróć True jeśli dodanie transakcji przebiegło pomyślnie, False w przeciwnym wypadku.
         """
-        if self.is_transaction_available(transaction):
+        if self.is_transaction_available(transaction.previous_tx_hash):
             if self.verify_transaction_signature(transaction):
                 self.transactions.append(transaction)
-            return True
+                return True
 
         return False

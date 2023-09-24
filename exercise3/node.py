@@ -126,3 +126,5 @@ def validate_chain(chain: Blockchain) -> bool:
         Podpowiedź: Dla ułatwienia możesz skonstruować nowego node'a, na bieżąco weryfikując jego poprawność.
     """
     raise NotImplementedError
+    
+    
